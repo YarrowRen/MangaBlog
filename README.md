@@ -1,58 +1,47 @@
-# 次元编辑室 / PANEL LOG
+# Yarrow 的次元编辑室 / MangaBlog
 
-漫画博客交互原型。包含响应式漫画分镜、四篇示例文章、六套分页结构、分类分页、全目录搜索、文章目录、阅读模式及代码复制。内容和看板角色为设计演示。
+Boyu(Yarrow) Ren 的漫画风博客试迁移版本。已从 [原博客](https://github.com/YarrowRen/YarrowRen.github.io) 迁移最新 **20 篇已发布文章与 About 页**；其余文章和原站保持不变。
+
+支持不规则漫画分镜、六套版式、每页六篇、分类、跨页搜索、桌面共同高度、动态翻页、完整静态文章、目录、阅读模式与代码复制。原有虚构样刊已从默认目录移除。20 篇内容目前形成四页，六套模板库继续保留，后续更多页数会使用完整循环。
 
 ## 运行与构建
 
-需要 Node.js 24 和 Python 3。无第三方前端依赖。
+需要 Node.js 24。开发预览另需 Python 3。
 
 ```sh
-cd /workspace/MangaBlog
+npm ci
 npm run dev
-npm run build
 ```
 
-`dist/` 是独立静态产物，支持 GitHub Pages 项目子路径。首轮先用原生 HTML/CSS/JS 验证美术与交互；正式内容系统可在确认视觉后迁移至 Astro/MDX。
+`npm run dev` 先构建，再服务 `dist/`。单独运行 `npm run build` 生成可部署到 GitHub Pages 项目子路径的静态产物。普通文章正文预渲染，关闭 JavaScript 仍能阅读；幻灯片、站内搜索和分页交互需要 JavaScript。构建无需连接原博客或图片托管站。
 
-## 浏览器验证
+构建依赖为 Markdown 渲染、KaTeX、代码高亮和 HTML 清理，版本及校验值由 package-lock.json 锁定。GitHub Actions 在推送 master 后先执行 npm ci，再构建部署；仓库 Pages 的 Source 应为 GitHub Actions。
 
-先启动静态服务，再执行 `npm test`。验证工具需要 Python Playwright 与 Chromium；当前云环境已提供。测试覆盖 1440、768、390、320 像素宽度、分类、搜索、文章切换、阅读模式、素材与减少动效。截图输出至 `/tmp/panel-log-review/`。
+## 内容与试迁移范围
 
-## GitHub Pages
+- [试迁移清单与保留情况](docs/migration-trial.md)
+- `content/posts/`：20 篇原始 Markdown / MDX。
+- `content/about.md`：原 About 文件。
+- `content/migration.json`：来源提交、原文哈希、完整元信息、原站链接和图片映射。
+- `assets/imported/`：74 张正文图片、原站头像、本地幻灯片及 15 个流程图 SVG。
 
-已有 `.github/workflows/pages.yml`。在仓库 Settings → Pages 中将 Source 设为 GitHub Actions。工作流在 master 分支推送或手动触发后构建、发布。需要 GitHub 写入权限及 Pages 启用；本地构建不表示已部署。
+首页作者身份、简介和联系方式来自原站；展示分组为 AI / Agent、工程手记、算法与安全、兴趣手记，原始标签完整保留。没有修改原站 CNAME、原仓库或全量迁移其余内容。
 
-## 审阅重点
+## 验证
 
-1. 首页标题、黑白漫画与珊瑚红的比例。
-2. 大分镜与辅助格的节奏，以及手机重排。
-3. 长文阅读、目录与阅读模式是否舒适。
-4. 看板角色与场景是否适合继续发展为完整美术设定。
+先运行 `npm run dev`，再在另一个终端执行：
 
-## 素材说明
+```sh
+npm test
+npm run test:pagination
+npm run test:layout
+npm run test:page-height
+```
 
-`assets/manga-sheet.webp` 为本轮 AI 生成的原创概念图集，包含编辑室、人物特写、街角与书桌四格。当前以单张图集的背景位置复用来保持风格一致。它是首轮美术占位，尚未进行逐格独立精修或专门的手机构图制作；后续可通过 Imagen 按 `docs/art-direction.md` 分别重制。气泡与文字均由 HTML/CSS 实现，图片里不嵌文字。
+浏览器验证依赖 Python Playwright 与 Chromium，当前云环境已提供。覆盖原文一致性、全部文章与图片、公式、流程图、日语注音、幻灯片交互、About、大小屏、分页历史及动态切换、25 档屏宽与文字安全、桌面统一高度。截图保存在 `/tmp/panel-log-review/`。
 
-## 分镜算法
+## 分镜与素材
 
-首页已改为共享切分线的凸多边形布局，而非独立百分比与负边距。参见 [布局算法](docs/layout-algorithm.md)。新增 `npm run test:layout` 验证 25 档屏宽、多个种子、动态重排、长文本及文字放大后的画格间距与内容安全区域。
+[布局算法](docs/layout-algorithm.md) · [桌面模板](docs/review/page-templates.svg) · [手机模板](docs/review/page-templates-mobile.svg) · [结构对照](docs/review/page-templates-comparison.svg)
 
-
-## 百篇分页与漫画页模板
-
-默认仍是四篇样刊。点击首页「体验百篇分页」或打开 `index.html?demo=1#latest`，启用 100 篇额外排版样稿，共 104 篇、18 页。样稿不是独立创作的真实文章，继续复用四张概念场景；详情页会明确说明正文复用情况。
-
-- 每页最多 6 篇，只渲染当前页画格；数据在 `articles.js` 中管理，按日期与 ID 稳定排序。
-- 六套结构在 `page-layouts.js` 中定义：开场大格、三段叙事、左右对页、长镜与特写、交错分镜、收束横格。参见 [桌面模板示意](docs/review/page-templates.svg)、[手机模板示意](docs/review/page-templates-mobile.svg)与[桌面/手机对照](docs/review/page-templates-comparison.svg)。
-- URL 保存页码、分类和演示开关。支持跳页、刷新、前进后退，以及从文章返回原分页。
-- 翻页采用旧页淡出后、新页逐格显影，保持每一阶段的几何安全；尊重减少动态效果设置，并处理快速连续点击和动画中断。
-- `npm run test:pagination` 覆盖 104 篇文章的完整分页、六套模板、分类末页、跨页搜索、历史状态、长文本与动态切换。
-
-当前是客户端分页原型。关闭 JavaScript 时保留最初四篇的静态内容；正式接入大量真实文章时，可将目录迁移至 Astro/MDX 的静态分页输出，继续复用模板和几何算法。
-
-
-## 桌面画布高度
-
-桌面端在当前容器宽度下，对整个目录及分类分页进行离屏预排版，六套模板共用一个足以容纳文字的高度预算。翻页、切换分类和末页不足六篇时保持一致；窗口尺寸、字体或目录内容变化后重新计算。手机端保留按内容自适应的高度。
-
-`npm run test:page-height` 验证四档桌面宽度的全部 18 页、分类、刷新及字号变化后的等高约束，同时导出模板 PNG。`npm run diagrams` 生成桌面、手机和对照 SVG，先用真实设备宽度计算结构，再缩小绘制。
+漫画封面继续使用首轮概念素材 `assets/manga-sheet.webp`，正文使用原博客素材；尚未进行新的逐篇 Imagen 封面精修。

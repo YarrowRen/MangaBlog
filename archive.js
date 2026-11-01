@@ -10,7 +10,7 @@ let requested,version=0,animations=[];
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 function readState(){
  const q=new URLSearchParams(location.search),raw=q.get('page')||'1';
- return normalize({demo:q.get('demo')==='1',category:categoryNames[q.get('category')]?q.get('category'):'all',page:/^\d{1,8}$/.test(raw)?Number(raw):1});
+ return normalize({demo:false,category:categoryNames[q.get('category')]?q.get('category'):'all',page:/^\d{1,8}$/.test(raw)?Number(raw):1});
 }
 function normalize(s){return {...s,page:selectPage(s).page};}
 function storeState(s,replace=false){
@@ -49,8 +49,8 @@ function render(){
  const count=catalogue(requested.demo).length;
  document.querySelector('.section-heading .count').textContent=` / ${count}`;
  document.querySelector('[data-filter="all"] span').textContent=String(count).padStart(2,'0');
- demoButton.setAttribute('aria-pressed',String(requested.demo));demoButton.textContent=requested.demo?'退出百篇演示':'体验百篇分页';
- document.querySelector('.demo-label').textContent=requested.demo?'百篇排版演示 · 4 篇样刊 + 100 篇排版样稿':'样刊 · 示例内容';
+ if(demoButton){demoButton.hidden=true;}
+ document.querySelector('.demo-label').textContent='试迁移 · 最新 20 篇原站文章';
  document.querySelector('#page-status').textContent=`共 ${total} 篇 · 第 ${page} / ${pages} 页 · 本页 ${items.length} 篇`;
  document.querySelector('#template-name').textContent=pageLayouts[index].name;
  document.querySelector('.empty').hidden=total!==0;
@@ -96,7 +96,7 @@ if(grid){
  document.documentElement.classList.add('archive-ready');
  requested=readState();render();storeState(requested,true);
  filters.forEach(button=>button.addEventListener('click',()=>navigate({...requested,category:button.dataset.filter,page:1},{source:'filter'})));
- demoButton.addEventListener('click',()=>navigate({...requested,demo:!requested.demo,page:1},{source:'demo'}));
+ demoButton?.addEventListener('click',()=>navigate({...requested,demo:!requested.demo,page:1},{source:'demo'}));
  pager.addEventListener('click',e=>{const button=e.target.closest('[data-page]');if(button&&!button.disabled){const target=button.dataset.delta?requested.page+Number(button.dataset.delta):Number(button.dataset.page);if(target!==requested.page)navigate({...requested,page:target});};});
  pager.addEventListener('submit',e=>{e.preventDefault();const form=e.target;if(form.reportValidity())navigate({...requested,page:Number(new FormData(form).get('page'))});});
  window.addEventListener('popstate',()=>navigate(readState(),{historyMode:'none',source:'history',animate:false}));

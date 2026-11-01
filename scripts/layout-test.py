@@ -58,7 +58,7 @@ if __name__ == '__main__':
         # Live resizing of the same DOM, filtering, and mutation-driven growth.
         for w in [320,660,1440,390]:
             page.set_viewport_size({'width':w,'height':800});page.wait_for_timeout(80)
-            for category in ['技术','创作','all']:
+            for category in ['AI','工程','all']:
                 page.locator(f'[data-filter="{category}"]').click();page.wait_for_timeout(80)
                 verify(page,f'live={w},filter={category}')
         page.evaluate('''() => {
