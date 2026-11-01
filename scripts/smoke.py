@@ -22,8 +22,10 @@ with sync_playwright() as p:
         page.wait_for_function('document.documentElement.dataset.layoutReady === \"true\"')
         if width in [1440,390]: page.screenshot(path=str(shots/f'home-{width}.png'),full_page=True,animations='disabled')
         page.get_by_role('button', name='技术手记',exact=True).click()
+        page.wait_for_function("document.querySelector('#chapter-page').getAttribute('aria-busy') === 'false'")
         assert page.locator('.article-card:visible,.quote-card:visible').count()==1
         page.locator('[data-filter="all"]').click()
+        page.wait_for_function("document.querySelector('#chapter-page').getAttribute('aria-busy') === 'false'")
         assert page.locator('.article-card:visible,.quote-card:visible').count()==4
         page.get_by_role('button',name='打开搜索').click()
         page.locator('#search-input').fill('代码')

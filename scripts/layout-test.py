@@ -41,36 +41,37 @@ def verify(page,label):
             distances += [distance(p,u,v) for p in b['poly'] for u,v in zip(a['poly'],a['poly'][1:]+a['poly'][:1])]
             assert min(distances)>=11.8,(label,'gutter too narrow',min(distances))
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),(label,'page overflow')
-with sync_playwright() as p:
-    browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
-    page=browser.new_page(reduced_motion='reduce')
-    errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-    widths=[280,320,360,390,419,420,459,460,600,619,620,659,660,699,700,701,768,820,1024,1050,1051,1280,1440,1920,2560]
-    for w in widths:
-        page.set_viewport_size({'width':w,'height':900});page.goto(BASE+'/index.html')
-        page.wait_for_function('document.documentElement.dataset.layoutReady === "true"')
-        verify(page,f'width={w}')
-    for seed in ['daily-issue-1','daily-issue-2','quiet-street','studio-night','seed-999']:
-        page.evaluate('(s)=>document.querySelector(".manga-spread").dataset.layoutSeed=s',seed)
-        page.wait_for_timeout(80)
-        verify(page,f'seed={seed}')
-    # Live resizing of the same DOM, filtering, and mutation-driven growth.
-    for w in [320,660,1440,390]:
-        page.set_viewport_size({'width':w,'height':800});page.wait_for_timeout(80)
-        for category in ['技术','创作','all']:
-            page.locator(f'[data-filter="{category}"]').click();page.wait_for_timeout(80)
-            verify(page,f'live={w},filter={category}')
-    page.evaluate('''() => {
-      document.querySelectorAll('.card-copy h3,.cover-caption h2').forEach(e=>e.textContent='这是一个需要完整显示并且不能被斜边裁切的很长的文章标题'.repeat(4));
-      document.querySelectorAll('.card-copy p').forEach(e=>e.textContent='AReallyLongUnbrokenEnglishTokenWithoutSpaces'.repeat(8)+'这段摘要应该让画格自然增高，而不是缩成难读的小字。'.repeat(6));
-    }''')
-    for w in [320,390,768,1440]:
-        page.set_viewport_size({'width':w,'height':900});page.wait_for_timeout(150)
-        verify(page,f'long-content={w}')
-    page.add_style_tag(content='.computed-layout h2,.computed-layout h3,.computed-layout p,.computed-layout .eyebrow,.computed-layout .meta,.computed-layout .card-bottom{font-size:200% !important}')
-    # A font change can be user-driven without a viewport resize.
-    page.wait_for_timeout(250)
-    verify(page,'200% text')
-    assert not errors,errors
-    browser.close()
-print(f'PASS: {len(widths)} viewport widths, live resize/filtering, long Chinese titles, unbroken English summaries, 200% text, polygon separation, >=12px gutters and caption containment.')
+if __name__ == '__main__':
+    with sync_playwright() as p:
+        browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+        page=browser.new_page(reduced_motion='reduce')
+        errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+        widths=[280,320,360,390,419,420,459,460,600,619,620,659,660,699,700,701,768,820,1024,1050,1051,1280,1440,1920,2560]
+        for w in widths:
+            page.set_viewport_size({'width':w,'height':900});page.goto(BASE+'/index.html')
+            page.wait_for_function('document.documentElement.dataset.layoutReady === "true"')
+            verify(page,f'width={w}')
+        for seed in ['daily-issue-1','daily-issue-2','quiet-street','studio-night','seed-999']:
+            page.evaluate('(s)=>document.querySelector(".manga-spread").dataset.layoutSeed=s',seed)
+            page.wait_for_timeout(80)
+            verify(page,f'seed={seed}')
+        # Live resizing of the same DOM, filtering, and mutation-driven growth.
+        for w in [320,660,1440,390]:
+            page.set_viewport_size({'width':w,'height':800});page.wait_for_timeout(80)
+            for category in ['技术','创作','all']:
+                page.locator(f'[data-filter="{category}"]').click();page.wait_for_timeout(80)
+                verify(page,f'live={w},filter={category}')
+        page.evaluate('''() => {
+          document.querySelectorAll('.card-copy h3,.cover-caption h2').forEach(e=>e.textContent='这是一个需要完整显示并且不能被斜边裁切的很长的文章标题'.repeat(4));
+          document.querySelectorAll('.card-copy p').forEach(e=>e.textContent='AReallyLongUnbrokenEnglishTokenWithoutSpaces'.repeat(8)+'这段摘要应该让画格自然增高，而不是缩成难读的小字。'.repeat(6));
+        }''')
+        for w in [320,390,768,1440]:
+            page.set_viewport_size({'width':w,'height':900});page.wait_for_timeout(150)
+            verify(page,f'long-content={w}')
+        page.add_style_tag(content='.computed-layout h2,.computed-layout h3,.computed-layout p,.computed-layout .eyebrow,.computed-layout .meta,.computed-layout .card-bottom{font-size:200% !important}')
+        # A font change can be user-driven without a viewport resize.
+        page.wait_for_timeout(250)
+        verify(page,'200% text')
+        assert not errors,errors
+        browser.close()
+    print(f'PASS: {len(widths)} viewport widths, live resize/filtering, long Chinese titles, unbroken English summaries, 200% text, polygon separation, >=12px gutters and caption containment.')
