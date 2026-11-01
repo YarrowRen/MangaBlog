@@ -1,9 +1,13 @@
+import {catalogue,selectPage,categoryNames} from './articles.js';
+import {renderArticleCard} from './article-card.js';
 import {pagePartition,pageLayouts} from './page-layouts.js';
 import {bounds,inset,safeRect,partition,clamp} from './geometry.js';
 const cover=document.querySelector('.manga-spread'),chapters=document.querySelector('.manga-chapters');
 const caption=panel=>panel.querySelector('.card-copy,.cover-caption,.panel-content');
 const rectStyle=(el,r)=>Object.assign(el.style,{left:`${r.x}px`,top:`${r.y}px`,width:`${r.w}px`,height:`${r.h}px`});
-let scheduled=false;
+let scheduled=false,archiveDemo=false;
+const desktopHeights=new Map();
+export function setArchiveMode(demo){archiveDemo=demo;}
 function queue(){if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;layoutPanels();});}}
 function place(panel,poly,gap){
   const shape=inset(poly,gap/2),box=bounds(shape),local=shape.map(([x,y])=>[x-box.x,y-box.y]);
@@ -28,9 +32,10 @@ function place(panel,poly,gap){
   // Content receives a hard safety rectangle; short art-only slots reserve image space.
   return Math.max(0,needed-safe.h);
 }
-function group(container,panels,w,mobile,seed,hero=false,pageIndex=null){
+function group(container,panels,w,mobile,seed,hero=false,pageIndex=null,heightFloor=0){
   let h=hero?(mobile?Math.max(400,w*1.1):(w<620?300:clamp(w*.48,470,620))):(mobile?Math.max(720,w*1.8):clamp(w*.39,400,540));
   if(pageIndex!==null)h=mobile?Math.max(340*panels.length,w*panels.length*.85):Math.max(900,w*.95);
+  h=Math.max(h,heightFloor);
   const gap=clamp(w*.016,12,20);
   let shapes, remaining=Infinity;
   for(let attempt=0;attempt<12;attempt++){
@@ -52,6 +57,44 @@ function group(container,panels,w,mobile,seed,hero=false,pageIndex=null){
   }
   return h;
 }
+// Preflight the entire catalogue, including category pages, at one common height.
+// This keeps the footer and pagination stationary across all desktop templates.
+function sharedDesktopHeight(w,seed){
+  const fontKey=['.card-copy h3','.card-copy p','.meta','.image-label'].map(selector=>{
+    const node=chapters.querySelector(selector);if(!node)return '';
+    const css=getComputedStyle(node);return [css.font,css.letterSpacing].join('/');
+  }).join('|');
+  const contentKey=JSON.stringify(catalogue(archiveDemo));
+  const key=[w,archiveDemo,seed,fontKey,contentKey].join('|');
+  if(desktopHeights.has(key))return {key,height:desktopHeights.get(key)};
+  const probe=document.createElement('div');
+  probe.className='manga-chapters computed-layout layout-measure';
+  probe.style.width=`${w}px`;probe.setAttribute('aria-hidden','true');probe.inert=true;
+  document.body.append(probe);
+  let height=Math.ceil(Math.max(900,w*.95)/16)*16;
+  const specs=[];
+  for(const category of ['all',...Object.keys(categoryNames)]){
+    const count=selectPage({demo:archiveDemo,category}).pages;
+    for(let page=1;page<=count;page++){
+      const {items}=selectPage({demo:archiveDemo,category,page});
+      if(items.length)specs.push({items,index:(page-1)%pageLayouts.length,seed:`${seed}-page-${category}-${page}`});
+    }
+  }
+  try{
+    for(let pass=0;pass<4;pass++){
+      let next=height;
+      for(const spec of specs){
+        const panels=spec.items.map(a=>renderArticleCard(a));probe.replaceChildren(...panels);
+        next=Math.max(next,group(probe,panels,w,false,spec.seed,false,spec.index,height));
+      }
+      next=Math.ceil(next/16)*16;
+      if(next===height)break;height=next;
+    }
+  }finally{probe.remove();}
+  if(desktopHeights.size>=8)desktopHeights.delete(desktopHeights.keys().next().value);
+  desktopHeights.set(key,height);
+  return {key,height};
+}
 export function layoutPanels(){
   if(!cover)return;
   const w=cover.clientWidth,mobile=w<620;
@@ -71,7 +114,19 @@ export function layoutPanels(){
   const cw=chapters.clientWidth;
   const index=Number(chapters.dataset.pageIndex||0);
   chapters.dataset.template=pageLayouts[index%pageLayouts.length].name;
-  chapters.style.height=`${all.length?group(chapters,all,cw,cw<620,`${seed}-page-${chapters.dataset.category||'all'}-${chapters.dataset.page||1}`,false,index):0}px`;
+  const pageSeed=`${seed}-page-${chapters.dataset.category||'all'}-${chapters.dataset.page||1}`;
+  let height=0;
+  if(all.length&&cw>=620){
+    const shared=sharedDesktopHeight(cw,seed);
+    height=group(chapters,all,cw,false,pageSeed,false,index,shared.height);
+    // Runtime content edits can raise the common budget, but never shrink it mid-session.
+    if(height>shared.height){height=group(chapters,all,cw,false,pageSeed,false,index,Math.ceil(height/16)*16);desktopHeights.set(shared.key,height);}
+    chapters.dataset.fixedHeight=String(height);
+  }else{
+    height=all.length?group(chapters,all,cw,true,pageSeed,false,index):0;
+    delete chapters.dataset.fixedHeight;
+  }
+  chapters.style.height=`${height}px`;
   document.documentElement.dataset.layoutReady='true';
 }
 if(cover){
@@ -90,6 +145,8 @@ if(cover){
   new MutationObserver(observeContent).observe(chapters,{childList:true,subtree:true});
   cover.querySelectorAll('.cover-caption,.panel-content,.mini-speech,.panel-index').forEach(el=>contentObserver.observe(el));
   observeContent();
-  document.fonts.ready.then(queue);document.fonts.addEventListener('loadingdone',queue);
+  const fontsWereLoading=document.fonts.status!=='loaded';
+  document.fonts.ready.then(()=>{if(fontsWereLoading)desktopHeights.clear();queue();});
+  document.fonts.addEventListener('loadingdone',()=>{desktopHeights.clear();queue();});
   window.addEventListener('resize',queue);queue();
 }

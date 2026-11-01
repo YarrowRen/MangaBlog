@@ -8,6 +8,8 @@
     "build": "node scripts/build.mjs",
     "test": "python3 scripts/smoke.py",
     "test:layout": "python3 scripts/layout-test.py",
-    "test:pagination": "python3 scripts/pagination-test.py"
+    "test:pagination": "python3 scripts/pagination-test.py",
+    "test:page-height": "python3 scripts/page-height-test.py",
+    "diagrams": "node scripts/template-diagram.mjs"
   }
 }

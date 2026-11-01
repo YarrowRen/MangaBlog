@@ -54,3 +54,5 @@
 .manga-chapters[aria-busy=true]{cursor:progress}
 @media(max-width:700px){.archive-toolbar{gap:10px;align-items:flex-start}.archive-toolbar .eyebrow{font-size:8px;letter-spacing:.5px}#page-status{font-size:11px}#demo-toggle{padding:9px;font-size:11px}.pagination{gap:5px}.pagination button{padding:8px;font-size:11px}.page-jump{margin-left:0;justify-content:center;width:100%;margin-top:8px}.demo-label{line-height:1.8}}
 html:not(.archive-ready) #demo-toggle{display:none}
+/* Preflight measurements never participate in the visible page or its scroll size. */
+.computed-layout.layout-measure{position:fixed!important;left:-100000px;top:0;height:0;visibility:hidden;pointer-events:none;contain:layout style}
