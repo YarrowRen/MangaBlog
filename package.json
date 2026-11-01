@@ -1,1 +1,12 @@
-{"name":"panel-log","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"python3 -m http.server 4321 --bind 0.0.0.0","build":"node scripts/build.mjs","test":"python3 scripts/smoke.py"}}
+{
+  "name": "panel-log",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 4321 --bind 0.0.0.0",
+    "build": "node scripts/build.mjs",
+    "test": "python3 scripts/smoke.py",
+    "test:layout": "python3 scripts/layout-test.py"
+  }
+}
