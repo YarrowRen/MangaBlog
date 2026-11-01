@@ -44,4 +44,6 @@ npm run test:page-height
 
 [布局算法](docs/layout-algorithm.md) · [桌面模板](docs/review/page-templates.svg) · [手机模板](docs/review/page-templates-mobile.svg) · [结构对照](docs/review/page-templates-comparison.svg)
 
-漫画封面继续使用首轮概念素材 `assets/manga-sheet.webp`，正文使用原博客素材；尚未进行新的逐篇 Imagen 封面精修。
+前六篇已采用按文章主题独立制作的黑白漫画封面，完整版本可在 `/covers.html` 查看。原始 PNG 保存在 `docs/artwork/covers/`，网页使用同尺寸 WebP；首页按焦点等比裁切，文章页保留完整比例。详见 [封面说明](docs/artwork/covers/BRIEF.md)。其余文章暂用首轮概念场景，正文图片仍为原博客素材。
+
+`npm run test:covers` 验证六档屏宽、图片比例、文字与封面分区、旧图集统一缩放和阅读模式。

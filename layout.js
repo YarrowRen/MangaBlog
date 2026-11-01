@@ -9,6 +9,26 @@ let scheduled=false,archiveDemo=false;
 const desktopHeights=new Map();
 export function setArchiveMode(demo){archiveDemo=demo;}
 function queue(){if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;layoutPanels();});}}
+function fitArtwork(panel,box,imageHeight=box.h){
+ const image=panel.querySelector(':scope > .cover-art > .card-cover');
+ if(image){
+  panel.style.setProperty('--cover-image-height',`${imageHeight}px`);
+  // Thumbnail panels fill with a uniform crop; full compositions remain in the reader/gallery.
+  image.style.objectFit='cover';
+  image.style.objectPosition=image.dataset.focus;
+  panel.dataset.imageFit=image.style.objectFit;
+ }
+ const art=panel.querySelector(':scope > .art');
+ if(art){
+  // A 1536x1024 atlas has four 768x512 tiles. Scale both axes uniformly,
+  // then offset the selected tile; percentage background sizing distorts it.
+  const tileW=768,tileH=512,scale=Math.max(box.w/tileW,box.h/tileH);
+  const column=art.classList.contains('portrait')||art.classList.contains('desk')?1:0;
+  const row=art.classList.contains('street')||art.classList.contains('desk')?1:0;
+  art.style.backgroundSize=`${1536*scale}px ${1024*scale}px`;
+  art.style.backgroundPosition=`${(box.w-tileW*scale)/2-column*tileW*scale}px ${(box.h-tileH*scale)/2-row*tileH*scale}px`;
+ }
+}
 function place(panel,poly,gap){
   const shape=inset(poly,gap/2),box=bounds(shape),local=shape.map(([x,y])=>[x-box.x,y-box.y]);
   rectStyle(panel,box);
@@ -19,16 +39,22 @@ function place(panel,poly,gap){
   const safe=safeRect(local,clamp(box.w*.035,14,24));
   panel.dataset.safe=JSON.stringify(safe);
   const content=caption(panel);
-  let needed=0;
+  let needed=0,imageHeight=box.h;
+  const hasCover=!!panel.querySelector(':scope > .cover-art');
+  const minimumArt=hasCover?clamp(box.w*.25,96,160):0;
   if(content){
     Object.assign(content.style,{width:`${safe.w}px`,left:`${safe.x}px`,top:'0px'});
     needed=content.getBoundingClientRect().height;
-    content.style.top=`${safe.y+safe.h-needed}px`;
+    const contentTop=safe.y+safe.h-needed;
+    content.style.top=`${contentTop}px`;
+    if(hasCover)imageHeight=Math.max(20,contentTop-12);
   }
   const label=panel.querySelector('.image-label,.panel-index');
   if(label){Object.assign(label.style,{left:`${safe.x}px`,top:`${safe.y}px`,maxWidth:`${safe.w}px`});needed+=label.getBoundingClientRect().height+18;}
   const bubble=panel.querySelector('.mini-speech');
   if(bubble){Object.assign(bubble.style,{left:`${safe.x}px`,top:`${safe.y}px`,maxWidth:`${safe.w}px`});needed=Math.max(needed,bubble.getBoundingClientRect().height+20);}
+  if(hasCover)needed+=minimumArt;
+  fitArtwork(panel,box,imageHeight);
   // Content receives a hard safety rectangle; short art-only slots reserve image space.
   return Math.max(0,needed-safe.h);
 }

@@ -11,7 +11,8 @@
     "test:pagination": "python3 scripts/pagination-test.py",
     "test:page-height": "python3 scripts/page-height-test.py",
     "diagrams": "node scripts/template-diagram.mjs",
-    "test:migration": "python3 scripts/migration-test.py"
+    "test:migration": "python3 scripts/migration-test.py",
+    "test:covers": "python3 scripts/covers-test.py"
   },
   "devDependencies": {
     "highlight.js": "11.12.0",

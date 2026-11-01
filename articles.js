@@ -1,7 +1,8 @@
+import {articleCovers} from './content/covers.js';
 import {importedArticles} from './content/catalogue.js';
 export const PAGE_SIZE=6;
 export const categoryNames={AI:'AI / Agent',工程:'工程手记',算法:'算法与安全',兴趣:'兴趣手记'};
-export const articles=importedArticles;
+export const articles=importedArticles.map(article=>({...article,cover:articleCovers[article.slug]}));
 export const catalogue=()=>[...articles].sort((a,b)=>b.published.localeCompare(a.published)||a.id.localeCompare(b.id));
 export function selectPage({category='all',page=1}={}){
  const filtered=catalogue().filter(a=>category==='all'||a.category===category);

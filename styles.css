@@ -76,3 +76,17 @@ html:not(.archive-ready) #demo-toggle{display:none}
 .about-reading{max-width:850px;margin:30px auto}.about-reading .prose img{width:180px;border-radius:8px}.about-reading .prose h2{font-size:28px}.about-title{margin-bottom:25px}
 @media(max-width:1050px){.site-header{gap:15px}.brand{font-size:18px}.site-header nav{gap:16px}.filters{flex-wrap:wrap}.demo-label{margin-left:0;width:100%}}
 @media(max-width:700px){.brand{font-size:16px}.brand small{font-size:5.5px;letter-spacing:.8px}.hero-heading h1{font-size:34px}.site-header nav{gap:4px}.filters button{padding:8px 10px}.article-tools .meta{flex-wrap:wrap;gap:6px}.article-heading .deck{font-size:14px}.without-toc .prose{padding:22px 16px}.migrated-post h1{font-size:25px}.migrated-post h2{font-size:22px}.migrated-post h3{font-size:19px}.migrated-post pre{font-size:12px}.migrated-post .toc{max-height:none}.toc{max-height:240px}.toc a{display:block}.about-title h1{font-size:30px}.profile-links{gap:8px}}
+/* Independent covers are native images. Never scale their axes separately. */
+.cover-art{position:relative;background:#fff;overflow:hidden}.cover-art>.card-cover{display:block;width:100%;height:100%;object-fit:cover;object-position:30% 15%;background:#fff}
+.computed-layout .panel>.cover-art{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;clip-path:var(--inner-clip);background:#fff}
+.computed-layout .cover-art>.card-cover{position:absolute;left:0;top:0;width:100%!important;height:var(--cover-image-height,100%)!important;object-fit:cover}
+.computed-layout a.panel:hover .card-cover{filter:grayscale(1) contrast(1.03)}
+.article-cover-panel{max-width:650px;margin:30px auto 45px;border:var(--line);background:white}
+.article-cover-panel img{display:block;width:100%;height:auto;object-fit:contain}
+.article-cover-panel figcaption{font-size:10px;line-height:1.8;padding:10px 15px;border-top:1px solid var(--ink);background:var(--paper);text-align:center;color:var(--muted)}
+.reading-mode .article-cover-panel{display:none}
+.cover-gallery-page{padding-top:25px;padding-bottom:50px}.cover-gallery-page h1{font-size:38px;margin:15px 0}.gallery-note{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:30px}
+.cover-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.cover-gallery img{display:block;width:100%;height:auto}.cover-gallery article>div{padding:16px;border-top:var(--line)}.cover-gallery small{font-size:10px;color:var(--red)}.cover-gallery h2{font-size:17px;line-height:1.6;margin-top:8px}
+@media(max-width:850px){.cover-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.cover-gallery{grid-template-columns:1fr}}
+
+.card-cover,.cover-gallery img,.article-cover-panel img{filter:grayscale(1)}

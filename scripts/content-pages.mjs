@@ -1,3 +1,4 @@
+import {articleCovers} from '../content/covers.js';
 import {readFile,writeFile,mkdir,cp} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import * as yaml from 'js-yaml';
@@ -8,7 +9,7 @@ import hljs from 'highlight.js';
 import sanitize from 'sanitize-html';
 const migration=JSON.parse(await readFile('content/migration.json','utf8'));
 const diagrams=JSON.parse(await readFile('content/diagrams.json','utf8'));
-export const imported=migration.articles;
+export const imported=migration.articles.map(article=>({...article,cover:articleCovers[article.slug]}));
 const assetPaths=new Map(Object.entries(migration.assets).flatMap(([url,path])=>[[url,path],[decodeURI(url),path]]));
 const escape=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function content(source){return source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/,'');}
@@ -98,7 +99,8 @@ export async function buildContent(){
   const {html,headings}=render(original,a,'../');
   const toc=headings.map(h=>`<a href="#${escape(h.id)}" class="toc-${h.level}">${escape(h.title)}</a>`).join('');
   const tags=a.tags.map(tag=>`<span>${escape(tag)}</span>`).join('');
-  const main=`<main class="reader-shell" id="main"><div class="breadcrumb"><a href="../index.html">放映首页</a> / <a href="../index.html#latest">文章目录</a> / ${escape(a.category)}</div><header class="article-heading"><span class="tag red">${escape(a.category)} / 原博客试迁移</span><h1 id="article-title">${escape(a.title)}</h1><p class="deck">${escape(a.summary)}</p><div class="article-tools"><div class="meta"><span>${escape(a.author)}</span><time datetime="${escape(a.published)}">${a.date.replaceAll('-','.')}</time><span>约 ${a.minutes} 分钟阅读</span></div><button class="reading-toggle" aria-pressed="false">切换阅读模式</button></div><div class="article-tags">${tags}</div></header><div class="reading-layout ${a.hideToc?'without-toc':''}">${a.hideToc?'':`<aside class="toc" aria-label="文章目录"><strong>IN THIS CHAPTER</strong>${toc}</aside>`}<article class="prose migrated-post" id="article-body">${html}<div class="colophon">作者：${escape(a.author)} · <a href="${escape(a.originalURL)}" target="_blank" rel="noopener noreferrer">原站文章 ↗</a> · <a href="https://github.com/YarrowRen/YarrowRen.github.io/blob/${migration.sourceCommit}/${encodeURI(a.source)}" target="_blank" rel="noopener noreferrer">原始 Markdown ↗</a></div></article></div><a class="back-link" href="../index.html#latest">← 返回文章目录</a></main>`;
+  const cover=a.cover?`<figure class="article-cover-panel"><a href="../${a.cover.src}" target="_blank" rel="noopener noreferrer" aria-label="查看完整漫画封面"><img src="../${a.cover.src}" alt="${escape(a.cover.alt)}" width="${a.cover.width}" height="${a.cover.height}" decoding="async"></a><figcaption>本篇黑白漫画封面 · 点击查看原图</figcaption></figure>`:'';
+  const main=`<main class="reader-shell" id="main"><div class="breadcrumb"><a href="../index.html">放映首页</a> / <a href="../index.html#latest">文章目录</a> / ${escape(a.category)}</div><header class="article-heading"><span class="tag red">${escape(a.category)} / 原博客试迁移</span><h1 id="article-title">${escape(a.title)}</h1><p class="deck">${escape(a.summary)}</p><div class="article-tools"><div class="meta"><span>${escape(a.author)}</span><time datetime="${escape(a.published)}">${a.date.replaceAll('-','.')}</time><span>约 ${a.minutes} 分钟阅读</span></div><button class="reading-toggle" aria-pressed="false">切换阅读模式</button></div><div class="article-tags">${tags}</div></header>${cover}<div class="reading-layout ${a.hideToc?'without-toc':''}">${a.hideToc?'':`<aside class="toc" aria-label="文章目录"><strong>IN THIS CHAPTER</strong>${toc}</aside>`}<article class="prose migrated-post" id="article-body">${html}<div class="colophon">作者：${escape(a.author)} · <a href="${escape(a.originalURL)}" target="_blank" rel="noopener noreferrer">原站文章 ↗</a> · <a href="https://github.com/YarrowRen/YarrowRen.github.io/blob/${migration.sourceCommit}/${encodeURI(a.source)}" target="_blank" rel="noopener noreferrer">原始 Markdown ↗</a></div></article></div><a class="back-link" href="../index.html#latest">← 返回文章目录</a></main>`;
   await writeFile('dist/'+a.href,document(a.title,a.summary,'../',main));
   rendered.push({slug:a.slug,headings:headings.length,bodyLength:html.length});
  }
