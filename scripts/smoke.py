@@ -15,6 +15,16 @@ with sync_playwright() as p:
         assert page.goto(base+'/index.html').status == 200
         page.wait_for_function('document.fonts.status === "loaded"')
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Overflow at {width}'
+        if width <= 700:
+            for card in page.locator('.article-card,.quote-card').all():
+                assert card.bounding_box()['width'] >= width - 50, 'Mobile panel unexpectedly narrow'
+        # The clipped-away corner must not remain part of the article link.
+        page.locator('.cover-main').scroll_into_view_if_needed()
+        assert page.locator('.cover-main').evaluate("""el => {
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.right - 2, r.bottom - 2);
+          return hit !== null && !el.contains(hit);
+        }"""), 'Clipped corner captures clicks'
         if width in [1440,390]: page.screenshot(path=str(shots/f'home-{width}.png'),full_page=True,animations='disabled')
         page.get_by_role('button', name='技术手记',exact=True).click()
         assert page.locator('.article-card:visible,.quote-card:visible').count()==1
